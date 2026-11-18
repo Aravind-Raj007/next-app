@@ -5,7 +5,7 @@ import "./globals.css";
 const mono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "700"],
+  weight: ["300", "400", "500"],
 });
 
 const display = Instrument_Serif({
@@ -16,8 +16,8 @@ const display = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "Codex Reel Studio",
-  description: "A recording stage for Codex reels — pick a task, roll, and cut.",
+  title: "next-app",
+  description: "A quiet place to build.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

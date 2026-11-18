@@ -1,235 +1,79 @@
-"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-import Deck from "@/components/Deck";
-import Stage from "@/components/Stage";
-import { PRESETS, type LogLine } from "@/lib/presets";
-
 export default function Home() {
-  const [activeId, setActiveId] = useState(PRESETS[0].id);
-  const [prompt, setPrompt] = useState(PRESETS[0].prompt);
-  const [lines, setLines] = useState<LogLine[]>([]);
-  const [running, setRunning] = useState(false);
-  const [done, setDone] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  const [take, setTake] = useState(1);
-  const [clock, setClock] = useState<string | null>(null);
-  const [framed, setFramed] = useState(false);
-
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const ticker = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const preset = PRESETS.find((p) => p.id === activeId) ?? PRESETS[0];
-
-  const clearTimers = useCallback(() => {
-    timers.current.forEach((t) => clearTimeout(t));
-    timers.current = [];
-    if (ticker.current) {
-      clearInterval(ticker.current);
-      ticker.current = null;
-    }
-  }, []);
-
-  const run = useCallback(() => {
-    if (running) return;
-    clearTimers();
-    setLines([]);
-    setElapsed(0);
-    setDone(false);
-    setRunning(true);
-    setTake((t) => t + 1);
-
-    const startedAt = Date.now();
-    ticker.current = setInterval(() => setElapsed(Date.now() - startedAt), 60);
-
-    let at = 350;
-    preset.lines.forEach((line) => {
-      at += line.gap ?? 520 + Math.random() * 460;
-      const delay = at;
-      timers.current.push(
-        setTimeout(() => {
-          setLines((prev) => [...prev, line]);
-        }, delay),
-      );
-    });
-
-    timers.current.push(
-      setTimeout(() => {
-        clearTimers();
-        setElapsed(Date.now() - startedAt);
-        setRunning(false);
-        setDone(true);
-      }, at + 420),
-    );
-  }, [clearTimers, preset, running]);
-
-  const stop = useCallback(() => {
-    clearTimers();
-    setRunning(false);
-    setDone(false);
-  }, [clearTimers]);
-
-  const reset = useCallback(() => {
-    clearTimers();
-    setRunning(false);
-    setDone(false);
-    setElapsed(0);
-    setLines([]);
-  }, [clearTimers]);
-
-  const select = useCallback(
-    (id: string) => {
-      const next = PRESETS.find((p) => p.id === id);
-      if (!next) return;
-      reset();
-      setActiveId(id);
-      setPrompt(next.prompt);
-    },
-    [reset],
-  );
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-        e.preventDefault();
-        run();
-      }
-      if (e.key === "Escape") setFramed(false);
-      if (e.key.toLowerCase() === "f" && !(e.target instanceof HTMLElement && e.target.closest("textarea"))) {
-        setFramed((v) => !v);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [run]);
-
-  useEffect(() => {
-    const tick = () => {
-      const now = new Date();
-      setClock(
-        now.toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
-      );
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => clearTimers, [clearTimers]);
-
   return (
-    <main
-      className={`relative z-10 mx-auto flex min-h-screen w-full flex-col ${
-        framed ? "max-w-none px-2" : "max-w-[1440px] px-5 pb-0 pt-5 sm:px-8"
-      }`}
-    >
-      {!framed && (
-        <header className="flex items-center justify-between border-b border-line pb-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center border border-bone/50 bg-bone text-ink">
-              <span className="font-display text-lg italic leading-none">C</span>
-            </span>
-            <div className="leading-tight">
-              <p className="text-[11px] uppercase tracking-[0.34em] text-bone">codex reel studio</p>
-              <p className="text-[9px] uppercase tracking-[0.24em] text-bone/30">
-                record · cut · post
-              </p>
-            </div>
+    <main className="relative mx-auto flex min-h-screen w-full max-w-[1180px] flex-col px-6 sm:px-10">
+      <header className="reveal flex items-center justify-between border-b border-line py-5">
+        <div className="flex items-center gap-2.5">
+          <span className="h-2 w-2 bg-ink" />
+          <span className="text-[11px] tracking-[0.18em] text-ink">next-app</span>
+        </div>
+        <nav className="flex items-center gap-6 text-[10px] uppercase tracking-[0.2em] text-muted">
+          <a className="transition-colors hover:text-ink" href="https://nextjs.org/docs">
+            docs
+          </a>
+          <a className="transition-colors hover:text-ink" href="https://github.com">
+            github
+          </a>
+          <span className="hidden text-ink/30 sm:inline">v0.1</span>
+        </nav>
+      </header>
+
+      <section className="relative flex flex-1 items-center">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-full">
+          <div className="dotgrid absolute right-0 top-10 hidden h-[calc(100%-5rem)] w-[38%] opacity-[0.55] [mask-image:radial-gradient(80%_70%_at_60%_40%,black,transparent)] lg:block" />
+        </div>
+
+        <div className="relative w-full py-16 lg:py-0">
+          <div className="reveal flex items-center gap-3 text-[9px] uppercase tracking-[0.28em] text-muted">
+            <span className="inline-block h-1 w-1 rounded-full bg-accent" />
+            starter · empty by design
           </div>
 
-          <div className="flex items-center gap-4 text-[9px] uppercase tracking-[0.24em] text-bone/40 sm:gap-6">
-            <span className="hidden items-center gap-2 sm:flex">
-              <span className="inline-block h-1 w-1 rounded-full bg-[var(--good)]" />
-              local mode
-            </span>
-            <span className="hidden sm:inline">take {String(take).padStart(2, "0")}</span>
-            <span className="tabular-nums text-bone/70">{clock ?? "--:--:--"}</span>
-            <button
-              type="button"
-              onClick={() => setFramed(true)}
-              className="border border-line px-2 py-1 text-[8px] uppercase tracking-[0.18em] text-bone/50 transition-colors hover:border-bone/35 hover:text-bone"
+          <h1
+            className="reveal mt-6 max-w-[13ch] font-display text-[clamp(3.2rem,9vw,7.5rem)] leading-[0.92] tracking-[-0.02em]"
+            style={{ animationDelay: "80ms" }}
+          >
+            A quiet place <span className="italic text-accent">to build.</span>
+          </h1>
+
+          <p
+            className="reveal mt-7 max-w-[46ch] text-[13px] leading-[1.9] text-muted"
+            style={{ animationDelay: "150ms" }}
+          >
+            Nothing here pretends to be a product. Edit{" "}
+            <code className="border-b border-line pb-px text-ink">src/app/page.tsx</code>, or
+            hand Codex a task and let it land the first real screen.
+          </p>
+
+          <div
+            className="reveal mt-10 flex flex-wrap items-center gap-3"
+            style={{ animationDelay: "210ms" }}
+          >
+            <a
+              href="https://nextjs.org/docs/app"
+              className="group relative flex h-11 items-center gap-3 bg-ink px-5 text-[10px] uppercase tracking-[0.2em] text-paper transition-transform hover:-translate-y-px"
             >
-              frame
-            </button>
-            <span className="hidden border border-line px-2 py-1 text-[8px] tracking-[0.18em] text-bone/40 sm:inline">
-              v0.1
-            </span>
-          </div>
-        </header>
-      )}
-
-      <div
-        className={
-          framed
-            ? "flex flex-1 items-center justify-center"
-            : "flex flex-1 flex-col items-center gap-12 py-8 lg:flex-row lg:items-start lg:justify-center lg:gap-16 lg:py-12"
-        }
-      >
-        <Stage
-          preset={preset}
-          lines={lines}
-          running={running}
-          done={done}
-          elapsed={elapsed}
-          take={take}
-          framed={framed}
-        />
-        {!framed && (
-          <Deck
-            presets={PRESETS}
-            activeId={activeId}
-            onSelect={select}
-            prompt={prompt}
-            setPrompt={setPrompt}
-            onRun={run}
-            onStop={stop}
-            onReset={reset}
-            running={running}
-            done={done}
-            elapsed={elapsed}
-            lineCount={lines.length}
-            take={take}
-          />
-        )}
-      </div>
-
-      {framed && (
-        <button
-          type="button"
-          onClick={() => setFramed(false)}
-          className="fixed right-5 top-4 z-40 border border-line bg-ink/70 px-3 py-1.5 text-[9px] uppercase tracking-[0.2em] text-bone/45 backdrop-blur transition-colors hover:text-bone"
-        >
-          esc · exit frame
-        </button>
-      )}
-
-      {!framed && (
-        <div className="mt-auto overflow-hidden border-t border-line py-3">
-          <div className="ticker-track flex w-max items-center gap-8 whitespace-nowrap text-[9px] uppercase tracking-[0.3em] text-bone/30">
-            {Array.from({ length: 2 }).map((_, block) => (
-              <span key={block} className="flex items-center gap-8">
-                <span className="text-tally">● rec</span>
-                <span>one task per reel</span>
-                <span className="text-bone/15">/</span>
-                <span>keep the frame clean</span>
-                <span className="text-bone/15">/</span>
-                <span>codex, not autocomplete</span>
-                <span className="text-bone/15">/</span>
-                <span>export 1080 × 1920</span>
-                <span className="text-bone/15">/</span>
-                <span>write it like a shot list</span>
-                <span className="text-bone/15">/</span>
-                <span>roll · watch · cut</span>
-                <span className="text-bone/15">/</span>
-              </span>
-            ))}
+              start building
+              <span className="text-paper/40 transition-transform group-hover:translate-x-1">→</span>
+            </a>
+            <a
+              href="https://nextjs.org/docs"
+              className="flex h-11 items-center border border-line px-5 text-[10px] uppercase tracking-[0.2em] text-ink/60 transition-colors hover:border-ink/30 hover:text-ink"
+            >
+              read the docs
+            </a>
           </div>
         </div>
-      )}
+
+        <div className="pointer-events-none absolute bottom-10 right-0 hidden text-[9px] uppercase tracking-[0.3em] text-ink/25 lg:block">
+          01 / home
+        </div>
+      </section>
+
+      <footer className="flex items-center justify-between border-t border-line py-4 text-[9px] uppercase tracking-[0.2em] text-ink/35">
+        <span>built with next.js</span>
+        <span className="hidden sm:inline">app router · typescript · tailwind</span>
+        <span>localhost:3000</span>
+      </footer>
     </main>
   );
 }
